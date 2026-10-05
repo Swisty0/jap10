@@ -1,14 +1,3 @@
-const express = require('express');
-const app = express();
-const PORT = process.env.PORT || 3000;
-
-app.get('/', (req, res) => {
-    res.send('Bot aktif ve çalışıyor!');
-});
-
-app.listen(PORT, () => {
-    console.log(`Web sunucusu ${PORT} portunda çalışıyor.`);
-});
 require('dotenv').config();
 const { Client, GatewayIntentBits, Collection, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const fs = require('fs');
@@ -50,20 +39,27 @@ client.once('ready', () => {
         const voicePanel = require('./commands/moderation/voicePanel'); 
         voicePanel.execute(client);
         console.log('[VoicePanel] Modülü başarıyla yüklendi ve aktif!');
-    } catch (err) {
-        console.error('[VoicePanel] Yüklenirken hata oluştu:', err.message);
-    }
+    } catch (err) {}
 });
 
+// Steam Verileri
 const steamDataFile = path.join(__dirname, 'steam_accounts.json');
-
 function loadSteamData() {
     if (!fs.existsSync(steamDataFile)) return { accounts: [], stats: { totalDistributed: 0 }, cooldowns: {} };
     return JSON.parse(fs.readFileSync(steamDataFile, 'utf8'));
 }
-
 function saveSteamData(data) {
     fs.writeFileSync(steamDataFile, JSON.stringify(data, null, 2));
+}
+
+// Disney Verileri
+const disneyDataFile = path.join(__dirname, 'disney_accounts.json');
+function loadDisneyData() {
+    if (!fs.existsSync(disneyDataFile)) return { accounts: [], stats: { totalDistributed: 0 }, cooldowns: {} };
+    return JSON.parse(fs.readFileSync(disneyDataFile, 'utf8'));
+}
+function saveDisneyData(data) {
+    fs.writeFileSync(disneyDataFile, JSON.stringify(data, null, 2));
 }
 
 client.on('interactionCreate', async interaction => {
@@ -81,6 +77,7 @@ client.on('interactionCreate', async interaction => {
     }
 
     if (interaction.isButton()) {
+        // TICKET OLUŞTURMA
         if (interaction.customId === 'create_ticket') {
             const guild = interaction.guild;
             const userName = interaction.user.username;
@@ -115,47 +112,32 @@ client.on('interactionCreate', async interaction => {
         if (interaction.customId === 'close_ticket') {
             await interaction.reply({ content: 'Destek talebi 5 saniye içinde kapatılıyor...' });
             setTimeout(async () => {
-                try {
-                    await interaction.channel.delete();
-                } catch (err) {
-                    console.error('Kanal silinirken hata oluştu:', err);
-                }
+                try { await interaction.channel.delete(); } catch (err) {}
             }, 5000);
         }
 
+        // STEAM HESAP AL
         if (interaction.customId === 'get_steam_account') {
             await interaction.deferReply({ ephemeral: true });
-
             const member = interaction.member;
-            const targetRoleName = "Free"; 
-            let role = interaction.guild.roles.cache.find(r => r.name === targetRoleName);
+            let role = interaction.guild.roles.cache.find(r => r.name === "Free");
 
             let hasValidStatus = false;
             const activities = member.presence?.activities || [];
             for (const activity of activities) {
                 const stateText = activity.state ? activity.state.toLowerCase() : "";
-                if (
-                    stateText.includes('discord.gg/jap10') || 
-                    stateText.includes('gg/jap10') || 
-                    stateText.includes('/jap10')
-                ) {
+                if (stateText.includes('discord.gg/jap10') || stateText.includes('gg/jap10') || stateText.includes('/jap10')) {
                     hasValidStatus = true;
                     break;
                 }
             }
 
             if (!hasValidStatus) {
-                return interaction.editReply({ 
-                    content: '❌ **Hata:** Discord durumunda (Custom Status) **`discord.gg/jap10`**, **`gg/jap10`** veya **`/jap10`** yazması gerekiyor! Lütfen durumunu güncelleyip tekrar dene.' 
-                });
+                return interaction.editReply({ content: '❌ **Hata:** Discord durumunda **`discord.gg/jap10`** yazması gerekiyor!' });
             }
 
             if (role && !member.roles.cache.has(role.id)) {
-                try {
-                    await member.roles.add(role);
-                } catch (err) {
-                    console.error("Rol verme hatası:", err);
-                }
+                try { await member.roles.add(role); } catch (err) {}
             }
 
             const data = loadSteamData();
@@ -169,13 +151,12 @@ client.on('interactionCreate', async interaction => {
             data.cooldowns[userId] = data.cooldowns[userId].filter(timestamp => now - timestamp < dayInMillis);
 
             if (data.cooldowns[userId].length >= 2) {
-                const oldestUsage = data.cooldowns[userId][0];
-                const timeLeft = Math.ceil((dayInMillis - (now - oldestUsage)) / (1000 * 60 * 60));
-                return interaction.editReply({ content: `⏳ Günlük sınırına ulaştın! Yeni bir hesap alabilmek için **${timeLeft} saat** beklemelisin.` });
+                const timeLeft = Math.ceil((dayInMillis - (now - data.cooldowns[userId][0])) / (1000 * 60 * 60));
+                return interaction.editReply({ content: `⏳ Günlük sınırına ulaştın! **${timeLeft} saat** beklemelisin.` });
             }
 
             if (data.accounts.length === 0) {
-                return interaction.editReply({ content: '❌ Şu anda sistemde hiç Steam hesabı stoğu kalmadı. Lütfen daha sonra tekrar dene.' });
+                return interaction.editReply({ content: '❌ Şu anda hiç Steam hesabı stoğu kalmadı.' });
             }
 
             const account = data.accounts.shift(); 
@@ -183,11 +164,7 @@ client.on('interactionCreate', async interaction => {
             data.stats.totalDistributed = (data.stats.totalDistributed || 0) + 1;
             saveSteamData(data);
 
-            // Panel mesajındaki istatistikleri anlık olarak güncelle
             try {
-                const stokSayisi = data.accounts.length;
-                const dagitilanSayisi = data.stats.totalDistributed;
-
                 const updatedEmbed = new EmbedBuilder()
                     .setColor('#2b2d31')
                     .setTitle('# 🔑 Steam Hesap Dağıtım Paneli')
@@ -195,17 +172,14 @@ client.on('interactionCreate', async interaction => {
                     .addFields(
                         { name: '📂 Kategori', value: '`steam`', inline: true },
                         { name: '🎭 Gerekli Durum', value: '`discord.gg/jap10`', inline: true },
-                        { name: '📊 İstatistikler', value: `Dağıtılan: **${dagitilanSayisi}** \vert{} Stok: **${stokSayisi}**`, inline: false }
+                        { name: '📊 İstatistikler', value: `Dağıtılan: **${data.stats.totalDistributed}** \vert{} Stok: **${data.accounts.length}**`, inline: false }
                     )
                     .setFooter({ text: 'Hesap Store • steam' });
 
                 await interaction.message.edit({ embeds: [updatedEmbed] });
-            } catch (e) {
-                console.error("Panel güncellenirken hata oluştu:", e);
-            }
+            } catch (e) {}
 
             const kalanHak = 2 - data.cooldowns[userId].length;
-
             const accountEmbed = new EmbedBuilder()
                 .setColor('#2b2d31')
                 .setTitle('🔑 steam — Hesabın Hazır! 🎉')
@@ -213,27 +187,102 @@ client.on('interactionCreate', async interaction => {
                 .addFields(
                     { name: '📁 Kategori', value: '`steam`', inline: true },
                     { name: '🎭 Rolün', value: '`Free`', inline: true },
-                    { name: '📊 Kalan Hakkın', value: `\`${kalanHak}/2\``, inline: true },
-                    { 
-                        name: '⚠ Bilgi', 
-                        value: 'Bu hesap bilgisi sadece sana özel (gizli) olarak gösterilmiştir. Başkasıyla paylaşma!', 
-                        inline: false 
-                    }
+                    { name: '📊 Kalan Hakkın', value: `\`${kalanHak}/2\``, inline: true }
                 )
                 .setFooter({ text: 'Hesap Store • steam' });
 
             try {
                 await interaction.user.send({ embeds: [accountEmbed] });
-                await interaction.editReply({ content: '✅ Hesabın başarıyla **DM (Özel Mesaj) kutuna** gönderildi! Lütfen kontrol et.' });
+                await interaction.editReply({ content: '✅ Hesabın başarıyla **DM kutuna** gönderildi!' });
             } catch (err) {
-                await interaction.editReply({ 
-                    content: '⚠️ DM kutun kapalı olduğu için hesabın buradan (sadece senin görebileceğin şekilde) paylaşıldı:', 
-                    embeds: [accountEmbed] 
-                });
+                await interaction.editReply({ content: '⚠️ DM kutun kapalı olduğu için hesabın gizli olarak buradan paylaşıldı:', embeds: [accountEmbed] });
+            }
+        }
+
+        // DISNEY+ HESAP AL
+        if (interaction.customId === 'get_disney_account') {
+            await interaction.deferReply({ ephemeral: true });
+            const member = interaction.member;
+            let role = interaction.guild.roles.cache.find(r => r.name === "Free");
+
+            let hasValidStatus = false;
+            const activities = member.presence?.activities || [];
+            for (const activity of activities) {
+                const stateText = activity.state ? activity.state.toLowerCase() : "";
+                if (stateText.includes('discord.gg/jap10') || stateText.includes('gg/jap10') || stateText.includes('/jap10')) {
+                    hasValidStatus = true;
+                    break;
+                }
+            }
+
+            if (!hasValidStatus) {
+                return interaction.editReply({ content: '❌ **Hata:** Discord durumunda **`discord.gg/jap10`** yazması gerekiyor!' });
+            }
+
+            if (role && !member.roles.cache.has(role.id)) {
+                try { await member.roles.add(role); } catch (err) {}
+            }
+
+            const data = loadDisneyData();
+            const userId = interaction.user.id;
+            const now = Date.now();
+
+            if (!data.cooldowns) data.cooldowns = {};
+            if (!data.cooldowns[userId]) data.cooldowns[userId] = [];
+
+            const dayInMillis = 24 * 60 * 60 * 1000;
+            data.cooldowns[userId] = data.cooldowns[userId].filter(timestamp => now - timestamp < dayInMillis);
+
+            if (data.cooldowns[userId].length >= 2) {
+                const timeLeft = Math.ceil((dayInMillis - (now - data.cooldowns[userId][0])) / (1000 * 60 * 60));
+                return interaction.editReply({ content: `⏳ Günlük sınırına ulaştın! **${timeLeft} saat** beklemelisin.` });
+            }
+
+            if (data.accounts.length === 0) {
+                return interaction.editReply({ content: '❌ Şu anda hiç Disney+ hesabı stoğu kalmadı.' });
+            }
+
+            const account = data.accounts.shift(); 
+            data.cooldowns[userId].push(now);
+            data.stats.totalDistributed = (data.stats.totalDistributed || 0) + 1;
+            saveDisneyData(data);
+
+            try {
+                const updatedEmbed = new EmbedBuilder()
+                    .setColor('#113ccf')
+                    .setTitle('# 🎬 Disney+ Hesap Dağıtım Paneli')
+                    .setDescription('Ücretsiz Disney+ hesabı almak için aşağıdaki **Disney+ Hesap Al** butonuna tıklayabilirsin.\n\n> ⚠️ **Şartlar:**\n> • Discord durumunda `discord.gg/jap10`, `gg/jap10` veya `/jap10` yazmalıdır.\n> • Günde en fazla **2 adet** hesap alabilirsin (24 saatte bir yenilenir).')
+                    .addFields(
+                        { name: '📂 Kategori', value: '`disney`', inline: true },
+                        { name: '🎭 Gerekli Durum', value: '`discord.gg/jap10`', inline: true },
+                        { name: '📊 İstatistikler', value: `Dağıtılan: **${data.stats.totalDistributed}** \vert{} Stok: **${data.accounts.length}**`, inline: false }
+                    )
+                    .setFooter({ text: 'Hesap Store • disney+' });
+
+                await interaction.message.edit({ embeds: [updatedEmbed] });
+            } catch (e) {}
+
+            const kalanHak = 2 - data.cooldowns[userId].length;
+            const accountEmbed = new EmbedBuilder()
+                .setColor('#113ccf')
+                .setTitle('🎬 disney+ — Hesabın Hazır! 🎉')
+                .setDescription(`Merhaba **${interaction.user.username}**! İşte Disney+ hesabın:\n\n\`\`\`${account}\`\`\``)
+                .addFields(
+                    { name: '📁 Kategori', value: '`disney`', inline: true },
+                    { name: '🎭 Rolün', value: '`Free`', inline: true },
+                    { name: '📊 Kalan Hakkın', value: `\`${kalanHak}/2\``, inline: true }
+                )
+                .setFooter({ text: 'Hesap Store • disney+' });
+
+            try {
+                const dmMessage = await interaction.user.send({ embeds: [accountEmbed] });
+                await interaction.editReply({ content: '✅ Disney+ hesabın başarıyla **DM kutuna** gönderildi!' });
+                setTimeout(async () => { try { await dmMessage.delete(); } catch (e) {} }, 5 * 60 * 1000);
+            } catch (err) {
+                await interaction.editReply({ content: '⚠️ DM kutun kapalı olduğu için hesabın gizli olarak buradan paylaşıldı:', embeds: [accountEmbed] });
             }
         }
     }
 });
 
-const TOKEN = process.env.BOT_TOKEN;
-client.login(TOKEN);
+client.login(process.env.BOT_TOKEN);
