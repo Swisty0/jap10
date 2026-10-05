@@ -4,7 +4,7 @@
   "description": "Discord Steam Account Distribution Bot",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js"
+    "start": "node deploy-commands.js && node index.js"
   },
   "dependencies": {
     "@discordjs/voice": "^0.17.0",
