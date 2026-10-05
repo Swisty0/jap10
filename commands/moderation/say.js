@@ -9,7 +9,10 @@ module.exports = {
     async execute(interaction) {
         const text = interaction.options.getString('mesaj');
         
-        await interaction.channel.send(text);
+        // 1. Önce Discord'a gizli bir yanıt vererek etkileşimi güvenceye alıyoruz (Zaman aşımını önler)
         await interaction.reply({ content: 'Mesaj iletildi.', ephemeral: true });
+
+        // 2. Ardından istenen mesajı kanala gönderiyoruz
+        await interaction.channel.send(text);
     }
 };
