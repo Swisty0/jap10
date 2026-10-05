@@ -24,7 +24,7 @@ module.exports = {
 
         const embed = new EmbedBuilder()
             .setColor('#113ccf')
-            .setTitle('# 🎬 Disney+ Hesap Dağıtım Paneli')
+            .setTitle(' <:images:1556766676270452837>🎬 Disney+ Hesap Dağıtım Paneli')
             .setDescription('Ücretsiz Disney+ hesabı almak için aşağıdaki **Disney+ Hesap Al** butonuna tıklayabilirsin.\n\n> ⚠️ **Şartlar:**\n> • Discord durumunda `discord.gg/jap10`, `gg/jap10` veya `/jap10` yazmalıdır.\n> • Günde en fazla **2 adet** hesap alabilirsin (24 saatte bir yenilenir).')
             .addFields(
                 { name: '📂 Kategori', value: '`disney`', inline: true },
@@ -38,7 +38,7 @@ module.exports = {
                 .setCustomId('get_disney_account')
                 .setLabel('Disney+ Hesap Al')
                 .setStyle(ButtonStyle.Success)
-                .setEmoji('🎬')
+                .setEmoji('<:images:1556766676270452837>')
         );
 
         await interaction.reply({ content: 'Disney+ paneli başarıyla kuruluyor!', ephemeral: true });
