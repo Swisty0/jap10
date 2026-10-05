@@ -89,7 +89,7 @@ client.on('messageCreate', async (message) => {
                 .setCustomId('get_disney_account')
                 .setLabel('Disney+ Hesap Al')
                 .setStyle(ButtonStyle.Primary)
-                .setEmoji('🎬')
+                .setEmoji('<:images:1556766676270452837>')
         );
 
         // Komutun yazıldığı mesajı silebilirsin (isteğe bağlı)
