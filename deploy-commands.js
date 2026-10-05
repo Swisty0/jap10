@@ -19,7 +19,6 @@ for (const folder of commandFolders) {
     }
 }
 
-// BURASI DÜZELTİLDİ: process.env.TOKEN yerine process.env.BOT_TOKEN yapıldı
 const rest = new REST().setToken(process.env.BOT_TOKEN);
 
 (async () => {
