@@ -1,7 +1,7 @@
 {
   "name": "discord-steam-bot",
   "version": "1.0.0",
-  "description": "Discord Steam Account Distribution Bot",
+  "description": "Discord Account Distribution Bot",
   "main": "index.js",
   "scripts": {
     "start": "node deploy-commands.js && node index.js"
