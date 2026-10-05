@@ -324,3 +324,15 @@ client.on('interactionCreate', async interaction => {
 });
 
 client.login(process.env.BOT_TOKEN);
+// Render'ın kapanmaması için eklenen mini HTTP sunucusu
+const express = require('express');
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+app.get('/', (req, res) => {
+    res.send('Bot aktif ve çalışıyor!');
+});
+
+app.listen(PORT, () => {
+    console.log(`Web sunucusu ${PORT} portunda dinlemede.`);
+});
