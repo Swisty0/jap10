@@ -1,3 +1,14 @@
+const express = require('express');
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+app.get('/', (req, res) => {
+    res.send('Bot aktif ve çalışıyor!');
+});
+
+app.listen(PORT, () => {
+    console.log(`Web sunucusu ${PORT} portunda çalışıyor.`);
+});
 require('dotenv').config();
 const { Client, GatewayIntentBits, Collection, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const fs = require('fs');
