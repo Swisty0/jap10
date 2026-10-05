@@ -75,7 +75,7 @@ client.on('messageCreate', async (message) => {
 
         const embed = new EmbedBuilder()
             .setColor('#113ccf')
-            .setTitle(' <:images:1556766676270452837> 🎬 Disney+ Hesap Dağıtım Paneli')
+            .setTitle(' <:images:1556766676270452837> Disney+ Hesap Dağıtım Paneli')
             .setDescription('Ücretsiz Disney+ hesabı almak için aşağıdaki **Disney+ Hesap Al** butonuna tıklayabilirsin.\n\n> ⚠️ **Şartlar:**\n> • Discord durumunda `discord.gg/jap10`, `gg/jap10` veya `/jap10` yazmalıdır.\n> • Günde en fazla **2 adet** hesap alabilirsin (24 saatte bir yenilenir).')
             .addFields(
                 { name: '📂 Kategori', value: '`disney`', inline: true },
