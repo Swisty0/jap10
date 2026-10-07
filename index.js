@@ -35,10 +35,18 @@ client.once('ready', () => {
     console.log(`Bot başarıyla giriş yaptı: ${client.user.tag}`);
     console.log(`Toplam ${client.commands.size} komut aktif olarak yüklendi!`);
 
+    // VoicePanel modülü
     try {
         const voicePanel = require('./commands/moderation/voicePanel'); 
         voicePanel.execute(client);
         console.log('[VoicePanel] Modülü başarıyla yüklendi ve aktif!');
+    } catch (err) {}
+
+    // Welcome modülü
+    try {
+        const welcomeModule = require('./welcome'); 
+        welcomeModule(client);
+        console.log('[Welcome] Modülü başarıyla yüklendi ve aktif!');
     } catch (err) {}
 });
 
@@ -66,16 +74,12 @@ function saveDisneyData(data) {
 client.on('messageCreate', async (message) => {
     if (message.author.bot) return;
 
-    // Sadece !disney komutunu algılar ve komutu yazan kişinin yetkisini kontrol edebilirsin
     if (message.content.trim() === '!disney') {
-        // İsteğe bağlı: Sadece yöneticilerin kurabilmesi için yetki kontrolü
-        // if (!message.member.permissions.has('Administrator')) return message.reply('❌ Bu komutu kullanmak için yetkin yok!');
-
         const data = loadDisneyData();
 
         const embed = new EmbedBuilder()
             .setColor('#113ccf')
-            .setTitle(' <:images:1556766676270452837> Disney+ Hesap Dağıtım Paneli')
+            .setTitle('<:images:1556766676270452837> Disney+ Hesap Dağıtım Paneli')
             .setDescription('Ücretsiz Disney+ hesabı almak için aşağıdaki **Disney+ Hesap Al** butonuna tıklayabilirsin.\n\n> ⚠️ **Şartlar:**\n> • Discord durumunda `discord.gg/jap10`, `gg/jap10` veya `/jap10` yazmalıdır.\n> • Günde en fazla **2 adet** hesap alabilirsin (24 saatte bir yenilenir).')
             .addFields(
                 { name: '📂 Kategori', value: '`disney`', inline: true },
@@ -92,10 +96,8 @@ client.on('messageCreate', async (message) => {
                 .setEmoji('<:images:1556766676270452837>')
         );
 
-        // Komutun yazıldığı mesajı silebilirsin (isteğe bağlı)
         try { await message.delete(); } catch (e) {}
 
-        // Paneli kanala gönder
         await message.channel.send({ embeds: [embed], components: [row] });
     }
 });
@@ -205,7 +207,7 @@ client.on('interactionCreate', async interaction => {
             try {
                 const updatedEmbed = new EmbedBuilder()
                     .setColor('#2b2d31')
-                    .setTitle('# 🔑 Steam Hesap Dağıtım Paneli')
+                    .setTitle('🔑 Steam Hesap Dağıtım Paneli')
                     .setDescription('Ücretsiz Steam hesabı almak için aşağıdaki **Steam Hesap Al** butonuna tıklayabilirsin.\n\n> ⚠️ **Şartlar:**\n> • Discord durumunda `discord.gg/jap10`, `gg/jap10` veya `/jap10` yazmalıdır.\n> • Günde en fazla **2 adet** hesap alabilirsin (24 saatte bir yenilenir).')
                     .addFields(
                         { name: '📂 Kategori', value: '`steam`', inline: true },
@@ -288,7 +290,7 @@ client.on('interactionCreate', async interaction => {
             try {
                 const updatedEmbed = new EmbedBuilder()
                     .setColor('#113ccf')
-                    .setTitle('# 🎬 Disney+ Hesap Dağıtım Paneli')
+                    .setTitle('🎬 Disney+ Hesap Dağıtım Paneli')
                     .setDescription('Ücretsiz Disney+ hesabı almak için aşağıdaki **Disney+ Hesap Al** butonuna tıklayabilirsin.\n\n> ⚠️ **Şartlar:**\n> • Discord durumunda `discord.gg/jap10`, `gg/jap10` veya `/jap10` yazmalıdır.\n> • Günde en fazla **2 adet** hesap alabilirsin (24 saatte bir yenilenir).')
                     .addFields(
                         { name: '📂 Kategori', value: '`disney`', inline: true },
@@ -324,6 +326,7 @@ client.on('interactionCreate', async interaction => {
 });
 
 client.login(process.env.BOT_TOKEN);
+
 // Render'ın kapanmaması için eklenen mini HTTP sunucusu
 const express = require('express');
 const app = express();
